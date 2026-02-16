@@ -15,7 +15,7 @@ services:
       - ./:/usr/src/
       - /usr/src/backend/node_modules
     ports:
-      - "3000:27017"
+      - "27017:27017"
     depends_on:
       - "mongodb-node"
 
