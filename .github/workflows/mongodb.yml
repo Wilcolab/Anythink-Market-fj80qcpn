@@ -1,0 +1,13 @@
+name: Wilco Actions
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  mongodb-action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use MongoDB Action
+        uses: mongodb-js/action@1.10.0  # Updated from 1.6.0 to 1.10.0
