@@ -9,51 +9,48 @@ jobs:
   wilco:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    name: Wilco Checks
 
-    # ✅ Recommended way: use GitHub native MongoDB service (no Docker client issues)
     services:
       mongodb:
         image: mongo:6.0
         ports:
           - 27017:27017
-        options: >-
-          --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
-      # Checkout repository
       - name: Checkout project
         uses: actions/checkout@v3
 
-      # Setup Node.js (upgrade from 16 → 18)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "18"
 
-      # Export secrets as environment variables
+      # ✅ CRITICAL FIX: Upgrade Docker client to latest
+      - name: Upgrade Docker client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-ce-cli docker-compose-plugin
+
+      - name: Verify Docker version
+        run: docker version
+
       - name: Load secrets into environment
         uses: oNaiPs/secrets-to-env-action@v1
         with:
           secrets: ${{ toJSON(secrets) }}
 
-      # Wait for MongoDB to be ready
+      # Ensure MongoDB is ready
       - name: Wait for MongoDB
         run: |
-          echo "Waiting for MongoDB to start..."
           for i in {1..30}; do
-            nc -z localhost 27017 && echo "MongoDB is ready" && exit 0
+            nc -z localhost 27017 && echo "MongoDB ready" && exit 0
             sleep 1
           done
-          echo "MongoDB failed to start"
+          echo "MongoDB failed"
           exit 1
 
-      # Run Wilco engine checks
+      # Run Wilco checks
       - name: Run Wilco checks
-        id: wilco
         uses: trywilco/actions@main
         with:
           engine: ${{ secrets.WILCO_ENGINE_URL }}
